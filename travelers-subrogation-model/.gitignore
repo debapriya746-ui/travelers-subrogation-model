@@ -1,0 +1,22 @@
+# Data (competition data is not redistributed)
+data/*.csv
+
+# Outputs
+outputs/models/*.pkl
+outputs/plots/*.png
+outputs/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.egg-info/
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+!data/README.md
+!outputs/models/.gitkeep
+!outputs/plots/.gitkeep

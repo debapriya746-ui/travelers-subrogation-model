@@ -1,7 +1,7 @@
 """
-Run the data-quality report described in the competition deck (slides 3-7):
-liability/subrogation relationship, vehicle-year glitch, license-age issue,
-driver-age anomalies, and claim day-of-week mismatch.
+Run the data-quality report: liability/subrogation relationship,
+vehicle-year glitch, license-age issue, driver-age anomalies, and claim
+day-of-week mismatch.
 
 Usage
 -----

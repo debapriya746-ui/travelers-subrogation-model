@@ -5,6 +5,8 @@ feature engineer + preprocessor + base model + calibrator + decision threshold.
 
 import pickle
 
+from src.preprocessing import cast_categorical_dtypes
+
 
 def save_model_package(pipeline, calibrator, threshold, best_params, cv_f1_score, filename):
     """Bundle everything a downstream scorer needs into one pickle file.
@@ -48,6 +50,7 @@ def predict_with_package(package, X_new):
     """Run the full inference path: feature engineering -> preprocessing -> calibrated model."""
     X_fe = package["feature_engineer"].transform(X_new)
     X_pre = package["preprocessor"].transform(X_fe)
+    X_pre = cast_categorical_dtypes(X_pre, package["preprocessor"])
     probs = package["calibrated_model"].predict_proba(X_pre)[:, 1]
     preds = (probs > package["threshold"]).astype(int)
     return preds, probs

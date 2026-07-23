@@ -1,14 +1,14 @@
 """
-Data-quality diagnostics referenced throughout the competition deck.
+Data-quality diagnostics: the "time travel glitches" found during EDA.
 
 These are exploratory / reporting functions (not part of the modeling
-pipeline itself) that reproduce the "time travel glitches" analysis:
+pipeline itself):
 
-  * Liability-percentage vs. subrogation rate (slide 3)
-  * License age vs. driver age at claim -- "negative driving experience" (slide 5)
-  * Claim day-of-week mismatch between reported and computed values (slide 7)
-  * Driver age anomalies: 8 to 241 years old (slide 6)
-  * Vehicle made-year in the future relative to the claim (slide 4)
+  * Liability-percentage vs. subrogation rate
+  * License age vs. driver age at claim: "negative driving experience"
+  * Claim day-of-week mismatch between reported and computed values
+  * Driver age anomalies: implausible ages outside a plausible range
+  * Vehicle made-year in the future relative to the claim
 
 Each function returns a small summary dict (for the printed report / README)
 and optionally saves a plot.
@@ -29,10 +29,10 @@ def _with_parsed_dates(df):
 
 
 def liability_vs_subrogation_rate(df, target_col="subrogation"):
-    """Reproduces slide 3: subrogation rate by policyholder-liability quartile."""
+    """Subrogation rate by policyholder-liability quartile."""
     df = df.copy()
     df["liab_bin"] = pd.cut(
-        df["liab_prct"], bins=[-0.01, 25, 50, 75, 100],
+        df["liab_prct"], bins=[0, 25, 50, 75, 100],
         labels=["0-25%", "26-50%", "51-75%", "76-100%"],
     )
     summary = df.groupby("liab_bin", observed=True)[target_col].agg(["count", "mean"])
@@ -42,7 +42,7 @@ def liability_vs_subrogation_rate(df, target_col="subrogation"):
 
 
 def license_age_issue(df, save_path=None):
-    """Reproduces slide 5: license age exceeding driver age at claim time."""
+    """License age exceeding driver age at claim time."""
     df2 = _with_parsed_dates(df)
     df2["driver_age_at_claim"] = df2["claim_date"].dt.year - df2["year_of_born"]
     df2["license_age_issue"] = df2["age_of_DL"] > df2["driver_age_at_claim"]
@@ -57,7 +57,7 @@ def license_age_issue(df, save_path=None):
         "invalid_pct": round(len(problem) / len(df2) * 100, 2),
         "worst_case_years": float(abs(problem["driving_experience"].min())) if len(problem) else 0.0,
     }
-    print(f"License age issue -- invalid: {summary['invalid_pct']}% of records "
+    print(f"License age issue, invalid: {summary['invalid_pct']}% of records "
           f"(worst case: {summary['worst_case_years']:.0f} years of negative experience)")
 
     if save_path:
@@ -82,7 +82,7 @@ def license_age_issue(df, save_path=None):
 
 
 def driver_age_anomalies(df, low=15, high=100):
-    """Reproduces slide 6: implausible driver ages (children, centenarians+)."""
+    """Implausible driver ages (children, centenarians+)."""
     df2 = _with_parsed_dates(df)
     driver_age = df2["claim_date"].dt.year - df2["year_of_born"]
     implausible = (driver_age < low) | (driver_age > high)
@@ -99,7 +99,7 @@ def driver_age_anomalies(df, low=15, high=100):
 
 
 def vehicle_year_glitch(df):
-    """Reproduces slide 4: vehicle made-year in the future relative to the claim date."""
+    """Vehicle made-year in the future relative to the claim date."""
     df2 = _with_parsed_dates(df)
     future_vehicle = df2["vehicle_made_year"] > df2["claim_date"].dt.year
     summary = {
@@ -112,7 +112,7 @@ def vehicle_year_glitch(df):
 
 
 def day_of_week_mismatch(df, save_path=None):
-    """Reproduces slide 7: reported vs. computed claim day-of-week mismatch."""
+    """Reported vs. computed claim day-of-week mismatch."""
     df2 = _with_parsed_dates(df)
     df2["computed_dow"] = df2["claim_date"].dt.strftime("%a")
 

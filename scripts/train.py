@@ -76,10 +76,9 @@ def main():
     # --- Step 4: conservative threshold selection (1-SE rule) -----------
     # NOTE: `calibrator.calibrated_model` was fit on the full training set, so
     # scoring it on CV folds carved from that same set is not a strictly
-    # clean holdout (this mirrors the original competition submission). For a
-    # leakage-free variant, pass `refit_per_fold=True` with an *unfitted*
-    # calibrated-classifier template instead -- slower, but methodologically
-    # cleaner; see the docstring in src/threshold.py.
+    # clean holdout. For a leakage-free variant, pass `refit_per_fold=True`
+    # with an *unfitted* calibrated-classifier template instead, slower but
+    # methodologically cleaner; see the docstring in src/threshold.py.
     optimizer = ThresholdOptimizer(
         n_splits=CONFIG["threshold_cv_splits"],
         n_repeats=CONFIG["threshold_cv_repeats"],

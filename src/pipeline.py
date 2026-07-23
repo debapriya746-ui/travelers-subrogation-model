@@ -1,10 +1,8 @@
 """
 End-to-end modeling pipeline: data prep -> Optuna-tuned LightGBM -> final fit.
 
-Model choice (LightGBM over XGBoost/CatBoost) rationale, per the competition
-deck: comparable-to-better F1, 5-10x faster hyperparameter search, ~50% lower
-memory footprint, and native handling of 20+ categorical features without
-one-hot encoding.
+LightGBM was chosen over XGBoost/CatBoost for its speed during hyperparameter
+search and native handling of categorical features without one-hot encoding.
 """
 
 import contextlib
@@ -20,7 +18,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_sco
 from sklearn.model_selection import StratifiedKFold
 
 from src.features import FeatureEngineer
-from src.preprocessing import build_preprocessor
+from src.preprocessing import build_preprocessor, cast_categorical_dtypes
 
 warnings.filterwarnings("ignore")
 
@@ -28,10 +26,10 @@ warnings.filterwarnings("ignore")
 class MLPipeline:
     """Orchestrates feature engineering, preprocessing, and LightGBM tuning.
 
-    Class imbalance (77% non-subrogation / 23% subrogation) is handled by
-    letting Optuna tune `scale_pos_weight` directly, rather than fixing it
-    to the naive class-ratio value -- this lets the search trade off
-    precision/recall along with every other hyperparameter.
+    Class imbalance in the target is handled by letting Optuna tune
+    `scale_pos_weight` directly, rather than fixing it to the naive
+    class-ratio value; this lets the search trade off precision/recall
+    along with every other hyperparameter.
     """
 
     def __init__(self, df, target_col="subrogation", id_col="claim_number",
@@ -85,8 +83,8 @@ class MLPipeline:
             "reg_lambda": trial.suggest_float("reg_lambda", 1e-5, 100, log=True),
             "reg_alpha": trial.suggest_float("reg_alpha", 1e-5, 100, log=True),
             "min_split_gain": trial.suggest_float("min_split_gain", 0, 1),
-            # Tuned rather than fixed to the raw 77/23 ratio -- lets the search
-            # find the imbalance-handling weight that actually maximizes F1.
+            # Tuned rather than fixed to the naive class-ratio value; lets the
+            # search find the imbalance-handling weight that actually maximizes F1.
             "scale_pos_weight": trial.suggest_float("scale_pos_weight", 1.0, 6.0),
             "random_state": self.random_state,
             "verbosity": -1,
@@ -107,8 +105,8 @@ class MLPipeline:
             X_val_fe = self.fe.transform(X_val_raw)
 
             preprocessor = build_preprocessor(X_tr_fe, self.numeric_features, self.categorical_features)
-            X_tr_pre = preprocessor.fit_transform(X_tr_fe)
-            X_val_pre = preprocessor.transform(X_val_fe)
+            X_tr_pre = cast_categorical_dtypes(preprocessor.fit_transform(X_tr_fe), preprocessor)
+            X_val_pre = cast_categorical_dtypes(preprocessor.transform(X_val_fe), preprocessor)
 
             model = LGBMClassifier(**params)
             with contextlib.redirect_stdout(None):
@@ -116,6 +114,7 @@ class MLPipeline:
                     X_tr_pre, y_tr,
                     eval_set=[(X_val_pre, y_val)],
                     eval_metric="binary_logloss",
+                    categorical_feature=preprocessor.cat_features_,
                     callbacks=[early_stopping(stopping_rounds=100), log_evaluation(period=0)],
                 )
 
@@ -168,10 +167,10 @@ class MLPipeline:
 
         X_fe = self.fe.fit_transform(self.X)
         self.preprocessor = self.create_preprocessor(X_fe)
-        X_pre = self.preprocessor.fit_transform(X_fe)
+        X_pre = cast_categorical_dtypes(self.preprocessor.fit_transform(X_fe), self.preprocessor)
 
         self.best_model = LGBMClassifier(**params)
-        self.best_model.fit(X_pre, self.y)
+        self.best_model.fit(X_pre, self.y, categorical_feature=self.preprocessor.cat_features_)
         print("Final base model trained on full dataset.")
         return self.best_model, X_pre
 
@@ -179,7 +178,8 @@ class MLPipeline:
     def transform(self, X_new):
         """Apply fitted feature engineering + preprocessing (no model call)."""
         X_fe = self.fe.transform(X_new)
-        return self.preprocessor.transform(X_fe)
+        X_pre = self.preprocessor.transform(X_fe)
+        return cast_categorical_dtypes(X_pre, self.preprocessor)
 
     def predict(self, X_new, threshold=None):
         if self.best_model is None:
@@ -192,7 +192,7 @@ class MLPipeline:
 
     # ------------------------------------------------------------------
     def plot_feature_importance(self, top_n=20, save_path=None):
-        """Reproduces slide 11: top-N LightGBM feature importances.
+        """Plot the top-N LightGBM feature importances.
 
         Top predictors typically found: liability %, accident type/site,
         witness presence, education level, mileage/vehicle age, and the

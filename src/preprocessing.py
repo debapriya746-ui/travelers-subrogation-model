@@ -49,4 +49,26 @@ def build_preprocessor(X_fe, numeric_features=None, categorical_features=None):
         verbose_feature_names_out=False,
     ).set_output(transform="pandas")
 
+    # Stashed so every caller (CV folds, final fit, saved-model inference) can
+    # find the categorical columns without re-deriving them from dtype - the
+    # ordinal-encoded output is float64, so dtype alone no longer tells you
+    # which columns are categorical after this point.
+    preprocessor.cat_features_ = cat_after_fe
+
     return preprocessor
+
+
+def cast_categorical_dtypes(X_pre, preprocessor):
+    """Cast a preprocessor's ordinal-encoded categorical columns to pandas
+    'category' dtype.
+
+    OrdinalEncoder outputs plain float64 columns, and LightGBM's sklearn API
+    only auto-detects categoricals from category-dtype DataFrame columns.
+    Without this cast (and passing `categorical_feature` to `fit`), every
+    categorical column gets split on as if it were an arbitrary ordered
+    integer instead of using LightGBM's native categorical splits.
+    """
+    cat_cols = preprocessor.cat_features_
+    if cat_cols:
+        X_pre = X_pre.astype({col: "category" for col in cat_cols})
+    return X_pre

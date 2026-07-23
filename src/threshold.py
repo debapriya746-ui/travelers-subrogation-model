@@ -13,8 +13,7 @@ Two selection strategies are supported once you're in the 1-SE band:
   * "A" - highest mean F1 in the band (performance-focused)
   * "B" - lowest std-dev in the band (stability-focused)
 
-The competition submission used option "A", landing on a threshold of
-~0.315 versus a raw best of ~0.29.
+Option "A" is used by default.
 """
 
 import numpy as np
@@ -30,8 +29,7 @@ class ThresholdOptimizer:
     Parameters
     ----------
     n_splits, n_repeats : int
-        E.g. 5 splits x 5 repeats = 25 total CV iterations (matches the
-        deck's "25 iterations" figure).
+        E.g. 5 splits x 5 repeats = 25 total CV iterations.
     threshold_range, threshold_step : tuple, float
         Grid of thresholds to evaluate.
     """

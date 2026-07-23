@@ -47,7 +47,7 @@ CONFIG = {
     "threshold_range": (0.10, 0.90),
     "threshold_step": 0.01,
     "threshold_cv_splits": 5,
-    "threshold_cv_repeats": 5,          # 5 x 5 = 25 iterations, matches slide deck
+    "threshold_cv_repeats": 5,          # 5 x 5 = 25 iterations
     "threshold_selection": "A",         # "A" = highest mean F1 in 1-SE band (0.315 in our run)
                                          # "B" = most stable (lowest std) in 1-SE band
     # Calibration

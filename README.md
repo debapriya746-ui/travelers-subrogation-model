@@ -1,7 +1,7 @@
 # Smarter Subrogation: Predicting Recovery Opportunities
 
-**2025 Travelers University Modeling Competition — "Data & Dreams"**
-Team: Debapriya Chatterjee, Pooja Raj Lakshmi, Vishal Reddy — University of Connecticut
+**2025 Travelers University Modeling Competition ("Data & Dreams")**
+Team: Debapriya Chatterjee, Pooja Raj Lakshmi, Vishal Reddy, University of Connecticut
 
 ## The business problem
 
@@ -38,7 +38,7 @@ under 25% liability) than high-liability claims (~0% above 75%).
   structure, regularization, and `scale_pos_weight` (rather than a fixed
   77/23 class-ratio weight) to handle class imbalance.
 - **Calibration**: Cross-validated isotonic regression transforms raw
-  LightGBM scores into probabilities that reflect true likelihood — needed
+  LightGBM scores into probabilities that reflect true likelihood, needed
   because a raw ranking score is not something a business stakeholder can
   interpret as "percent chance of recovery."
 - **Threshold selection**: Repeated Stratified K-Fold CV (5 splits x 5
@@ -99,7 +99,7 @@ the accident, attorney involvement, and witness statement quality.
 │   ├── calibration.py        # ModelCalibrator (isotonic/sigmoid probability calibration)
 │   ├── threshold.py          # ThresholdOptimizer (repeated-CV 1-SE rule threshold selection)
 │   ├── model_io.py           # save/load the full model package
-│   └── data_quality.py       # EDA diagnostics reproducing the "time travel glitches" analysis
+│   └── data_quality.py       # EDA diagnostics for the "time travel glitches" data issues
 ├── scripts/
 │   ├── run_eda.py            # python scripts/run_eda.py
 │   ├── train.py              # python scripts/train.py --trials 100
@@ -111,14 +111,14 @@ the accident, attorney involvement, and witness statement quality.
 
 ## Setup
 
-**Option A — conda (recommended, keeps this out of your `base` environment):**
+**Option A (conda, recommended, keeps this out of your `base` environment):**
 
 ```bash
 conda env create -f environment.yml
 conda activate subrogation-model
 ```
 
-**Option B — venv + pip:**
+**Option B (venv + pip):**
 
 ```bash
 python -m venv .venv
@@ -131,7 +131,7 @@ Either way, place the competition CSVs in `data/` (see `data/README.md`).
 ## Usage
 
 ```bash
-# 1. Data quality report (reproduces the deck's "time travel glitches" analysis)
+# 1. Data quality report ("time travel glitches" analysis)
 python scripts/run_eda.py
 
 # 2. Train: Optuna search -> final model -> calibration -> 1-SE threshold -> save package

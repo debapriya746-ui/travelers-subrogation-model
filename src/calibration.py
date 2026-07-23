@@ -1,7 +1,7 @@
 """
 Probability calibration.
 
-A raw LightGBM score is not a true probability -- it's optimized for ranking,
+A raw LightGBM score is not a true probability; it's optimized for ranking,
 not for "does this number mean what a business stakeholder thinks it means."
 We calibrate with cross-validated isotonic regression (or Platt/sigmoid
 scaling) so the output can be trusted as an actual likelihood, which matters

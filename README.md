@@ -1,7 +1,7 @@
 # Smarter Subrogation: Predicting Recovery Opportunities
 
-**2025 Travelers University Modeling Competition ("Data & Dreams")**
-Team: Debapriya Chatterjee, Pooja Raj Lakshmi, Vishal Reddy, University of Connecticut
+**2025 Travelers University Modeling Competition - "Data & Dreams"**
+Team: Debapriya Chatterjee, Pooja Raj Lakshmi, Vishal Reddy - University of Connecticut
 
 ## The business problem
 
@@ -118,7 +118,7 @@ conda env create -f environment.yml
 conda activate subrogation-model
 ```
 
-**Option B (venv + pip):**
+**Option B - venv + pip:**
 
 ```bash
 python -m venv .venv
